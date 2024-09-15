@@ -1,0 +1,46 @@
+services:
+  test-sqlite:
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    build:
+      dockerfile: docker/app/Dockerfile
+      context: .
+    entrypoint: pytest
+    volumes:
+      - ./ThoughtsBackend:/opt/code
+
+  test-postgresql:
+    env_file: environment.env
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    build:
+      dockerfile: docker/app/Dockerfile
+      context: .
+    entrypoint: pytest
+    depends_on:
+      - db
+    volumes:
+      - ./ThoughtsBackend:/opt/code
+
+  db:
+    build:
+      context: .
+      dockerfile: ./docker/db/Dockerfile
+      args:
+        - POSTGRES_DB=thoughts
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=somepassword
+        - POSTGRES_PORT=5432
+    # ports:
+    #   - "5432:5432"
+  server:
+    env_file: environment.env
+    image: thoughts_server
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+
